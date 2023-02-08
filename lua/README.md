@@ -5,7 +5,7 @@ Neovim plugin for displaying references and difinition infos upon functions like
 ## Pretty easy implementation, a lot of things to do.
 
 ```lua
-require'lens'.setup({})
+require'lsp_lens'.setup({})
 ```
 
 ### Commands
