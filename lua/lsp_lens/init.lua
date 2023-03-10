@@ -14,7 +14,7 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("NvimLensOn", lens.procedure, {})
   vim.api.nvim_create_user_command("NvimLensOff", lens.nvim_lens_off, {})
 
-  vim.api.nvim_create_autocmd({ "LspAttach", "InsertLeave" }, {
+  vim.api.nvim_create_autocmd({ "LspAttach", "InsertLeave", "TextChanged" }, {
     group = augroup,
     callback = lens.procedure
   })
