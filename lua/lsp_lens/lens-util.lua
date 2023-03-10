@@ -33,7 +33,7 @@ end
 local function get_cur_document_functions(results)
   local ret = {}
   for _, res in pairs(results or {}) do
-    for _, v in pairs(res.result) do
+    for _, v in pairs(res.result or {}) do
       -- TODO: detect Method(6) of Struct(23) and Class(5)
       if v.kind == 12 then
         table.insert(ret, { name = v.name, rangeStart = v.range.start, selectionRangeStart = v.selectionRange.start })
