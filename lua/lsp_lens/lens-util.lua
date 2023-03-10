@@ -43,9 +43,9 @@ local function get_cur_document_functions(results)
   return ret
 end
 
-local function supports_implement(buf)
+local function lsp_support_method(buf, method)
   for _, client in pairs(lsp.get_active_clients({ bufnr = buf })) do
-    if client.supports_method('textDocument/implementation') then
+    if client.supports_method(method) then
       return true
     end
   end
@@ -54,7 +54,7 @@ end
 
 local function do_request(params)
   local counting = {}
-  if supports_implement(vim.api.nvim_get_current_buf()) then
+  if lsp_support_method(vim.api.nvim_get_current_buf(), methods[2]) then
     local implements = lsp.buf_request_sync(0, methods[2], params, 10000)
     counting["implementation"] = result_count(implements)
   end
@@ -83,9 +83,13 @@ local function make_params(results)
 end
 
 local function get_document_symbol()
+  local method = 'textDocument/documentSymbol'
   local params = { textDocument = lsp.util.make_text_document_params() }
-  local results = lsp.buf_request_sync(0, 'textDocument/documentSymbol', params, 10000)
-  return results
+  if lsp_support_method(vim.api.nvim_get_current_buf(), method) then
+    return lsp.buf_request_sync(0, method, params, 10000)
+  else
+    return -1
+  end
 end
 
 local function do_functions_request(functions) 
@@ -136,6 +140,9 @@ end
 
 function utils:procedure()
   local document_symbols = get_document_symbol()
+  if document_symbols == -1 then
+    return
+  end
   local document_functions = get_cur_document_functions(document_symbols)
   -- vim.pretty_print(document_functions)
   local document_functions_with_params = make_params(document_functions)
