@@ -1,4 +1,5 @@
 local utils = {}
+local config = require('lsp_lens.config')
 
 local lsp = vim.lsp
 
@@ -7,18 +8,6 @@ local methods = {
   'textDocument/implementation',
   'textDocument/references',
 }
-
-local function request_done()
-  local done = true
-  ---@diagnostic disable-next-line: param-type-mismatch
-  for _, method in pairs(methods()) do
-    if not self.request_status[method] then
-      done = false
-      break
-    end
-  end
-  return done
-end
 
 local function result_count(results)
   local ret = 0
@@ -93,7 +82,7 @@ local function delete_existing_lines(ns_id)
 end
 
 local function display_lines(query_results)
-  local ns_id = vim.api.nvim_create_namespace('lens')
+  local ns_id = vim.api.nvim_create_namespace('lsp-lens')
   delete_existing_lines(ns_id)
   for _, query in pairs(query_results) do
     local virt_lines = {}
@@ -126,7 +115,7 @@ local function do_request(functions)
       finished[idx][2] = true
     end)
 
-    params.context = { includeDeclaration = true }
+    params.context = { includeDeclaration = config.config.include_declaration }
     lsp.buf_request_all(0, methods[3], params, function(references)
       counting["references"] = result_count(references)
       finished[idx][3] = true
@@ -160,41 +149,21 @@ local function make_params(results)
   return results
 end
 
-local function get_document_symbol()
-  local method = 'textDocument/documentSymbol'
-  local params = { textDocument = lsp.util.make_text_document_params() }
-  if lsp_support_method(vim.api.nvim_get_current_buf(), method) then
-    return lsp.buf_request_sync(0, method, params, 10000)
-  else
-    return -1
-  end
-end
-
-local function do_functions_request(functions) 
-  for _, v in pairs(functions) do
-    v.counting = do_request(v)
-  end
-  return functions
-end
-
 function utils:nvim_lens_off()
-  delete_existing_lines(vim.api.nvim_create_namespace('lens'))
+  delete_existing_lines(vim.api.nvim_create_namespace('lsp-lens'))
 end
-
 
 function utils:procedure()
   local method = 'textDocument/documentSymbol'
   local params = { textDocument = lsp.util.make_text_document_params() }
+
   if lsp_support_method(vim.api.nvim_get_current_buf(), method) then
     lsp.buf_request_all(0, method, params, function(document_symbols)
       local document_functions = get_cur_document_functions(document_symbols)
       -- vim.pretty_print(document_functions)
       local document_functions_with_params = make_params(document_functions)
       -- vim.pretty_print(document_functions_with_params)
-      -- local results = do_functions_request(document_functions_with_params)
       do_request(document_functions_with_params)
-      -- vim.pretty_print(results)
-      -- display_lines(results)
     end)
   end
 end
