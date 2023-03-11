@@ -17,9 +17,17 @@ require("lazy").setup({
 require'lsp_lens'.setup({})
 ```
 
-### Commands
+## Configs
+Below is the default config
+```json
+{
+  enable = true,
+  include_declaration = false   -- Reference include declaration
+}
 ```
-:NvimLensOn
-:NvimLensOff
+## Commands
+```
+:LspLensOn
+:LspLensOff
 ```
 
