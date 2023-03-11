@@ -1,5 +1,6 @@
-local utils = {}
+local lsplens = {}
 local config = require('lsp_lens.config')
+-- local utils = require('lsp_lens.utils')
 
 local lsp = vim.lsp
 
@@ -8,6 +9,17 @@ local methods = {
   'textDocument/implementation',
   'textDocument/references',
 }
+
+local function merge_table(tbl1, tbl2)
+  local ret = {}
+  for _, item in pairs(tbl1 or {}) do
+    table.insert(ret, item)
+  end
+  for _, item in pairs(tbl2 or {}) do
+    table.insert(ret, item)
+  end
+  return ret
+end
 
 local function result_count(results)
   local ret = 0
@@ -19,15 +31,22 @@ local function result_count(results)
   return ret
 end
 
+local function get_functions(result)
+  local ret = {}
+  for _, v in pairs(result or {}) do
+    if v.kind == 12 or v.kind == 6 then
+      table.insert(ret, { name = v.name, rangeStart = v.range.start, selectionRangeStart = v.selectionRange.start })
+    elseif v.kind == 23 or v.kind == 5 then
+      ret = merge_table(ret, get_functions(v.children))
+    end
+  end
+  return ret
+end
+
 local function get_cur_document_functions(results)
   local ret = {}
   for _, res in pairs(results or {}) do
-    for _, v in pairs(res.result or {}) do
-      -- TODO: detect Method(6) of Struct(23) and Class(5)
-      if v.kind == 12 then
-        table.insert(ret, { name = v.name, rangeStart = v.range.start, selectionRangeStart = v.selectionRange.start })
-      end
-    end
+    ret = merge_table(ret, get_functions(res.result))
   end
   return ret
 end
@@ -84,7 +103,7 @@ end
 local function display_lines(bufnr, query_results)
   local ns_id = vim.api.nvim_create_namespace('lsp-lens')
   delete_existing_lines(bufnr, ns_id)
-  for _, query in pairs(query_results) do
+  for _, query in pairs(query_results or {}) do
     local virt_lines = {}
     local vline = { {string.rep(" ", query.rangeStart.character) .. create_string(query.counting), "LspLens"} }
     table.insert(virt_lines, vline)
@@ -96,7 +115,7 @@ local function do_request(symbols)
   local functions = symbols.document_functions_with_params
   local finished = {}
 
-  for idx, function_info in pairs(functions) do
+  for idx, function_info in pairs(functions or {}) do
     table.insert(finished, { false, false, false })
 
     local params = function_info.query_params
@@ -136,7 +155,7 @@ local function do_request(symbols)
 end
 
 local function make_params(results)
-  for _, query in pairs(results) do
+  for _, query in pairs(results or {}) do
     local params = {
       position = {
         character = query.selectionRangeStart.character,
@@ -149,19 +168,19 @@ local function make_params(results)
   return results
 end
 
-function utils:lsp_lens_on()
+function lsplens:lsp_lens_on()
   config.config.enable = true
-  utils:procedure()
+  lsplens:procedure()
 end
 
-function utils:lsp_lens_off()
+function lsplens:lsp_lens_off()
   config.config.enable = false
   delete_existing_lines(0, vim.api.nvim_create_namespace('lsp-lens'))
 end
 
-function utils:procedure()
+function lsplens:procedure()
   if config.config.enable == false then
-    utils:lsp_lens_off()
+    lsplens:lsp_lens_off()
     return
   end
 
@@ -180,4 +199,4 @@ function utils:procedure()
   end
 end
 
-return utils
+return lsplens
