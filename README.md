@@ -19,7 +19,7 @@ require'lsp_lens'.setup({})
 
 ## Configs
 Below is the default config
-```json
+```
 {
   enable = true,
   include_declaration = false   -- Reference include declaration
