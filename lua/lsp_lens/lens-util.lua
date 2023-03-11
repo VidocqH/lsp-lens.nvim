@@ -74,25 +74,26 @@ local function requests_done(finished)
   return true
 end
 
-local function delete_existing_lines(ns_id)
-  local existing_marks = vim.api.nvim_buf_get_extmarks(0, ns_id, 0, -1, {})
+local function delete_existing_lines(bufnr, ns_id)
+  local existing_marks = vim.api.nvim_buf_get_extmarks(bufnr, ns_id, 0, -1, {})
   for _, v in pairs(existing_marks) do
-    vim.api.nvim_buf_del_extmark(0, ns_id, v[1])
+    vim.api.nvim_buf_del_extmark(bufnr, ns_id, v[1])
   end
 end
 
-local function display_lines(query_results)
+local function display_lines(bufnr, query_results)
   local ns_id = vim.api.nvim_create_namespace('lsp-lens')
-  delete_existing_lines(ns_id)
+  delete_existing_lines(bufnr, ns_id)
   for _, query in pairs(query_results) do
     local virt_lines = {}
     local vline = { {string.rep(" ", query.rangeStart.character) .. create_string(query.counting), "COMMENT"} }
     table.insert(virt_lines, vline)
-    vim.api.nvim_buf_set_extmark(0, ns_id, query.rangeStart.line-1, 0, {virt_lines = virt_lines})
+    vim.api.nvim_buf_set_extmark(bufnr, ns_id, query.rangeStart.line-1, 0, {virt_lines = virt_lines})
   end
 end
 
-local function do_request(functions)
+local function do_request(symbols)
+  local functions = symbols.document_functions_with_params
   local finished = {}
 
   for idx, function_info in pairs(functions) do
@@ -102,7 +103,7 @@ local function do_request(functions)
     local counting = {}
 
     if lsp_support_method(vim.api.nvim_get_current_buf(), methods[2]) then
-      lsp.buf_request_all(0, methods[2], params, function(implements)
+      lsp.buf_request_all(symbols.bufnr, methods[2], params, function(implements)
         counting["implementation"] = result_count(implements)
         finished[idx][1] = true
       end)
@@ -110,13 +111,13 @@ local function do_request(functions)
       finished[idx][1] = true
     end
 
-    lsp.buf_request_all(0, methods[1], params, function(definition)
+    lsp.buf_request_all(symbols.bufnr, methods[1], params, function(definition)
       counting["definition"] = result_count(definition)
       finished[idx][2] = true
     end)
 
     params.context = { includeDeclaration = config.config.include_declaration }
-    lsp.buf_request_all(0, methods[3], params, function(references)
+    lsp.buf_request_all(symbols.bufnr, methods[3], params, function(references)
       counting["references"] = result_count(references)
       finished[idx][3] = true
     end)
@@ -130,7 +131,7 @@ local function do_request(functions)
     if requests_done(finished) then
       timer:stop()
       timer:close()
-      display_lines(functions)
+      display_lines(symbols.bufnr, functions)
     end
   end))
 end
@@ -149,21 +150,23 @@ local function make_params(results)
   return results
 end
 
-function utils:nvim_lens_off()
-  delete_existing_lines(vim.api.nvim_create_namespace('lsp-lens'))
+function utils:lsp_lens_off()
+  delete_existing_lines(0, vim.api.nvim_create_namespace('lsp-lens'))
 end
 
 function utils:procedure()
   local method = 'textDocument/documentSymbol'
   local params = { textDocument = lsp.util.make_text_document_params() }
 
-  if lsp_support_method(vim.api.nvim_get_current_buf(), method) then
-    lsp.buf_request_all(0, method, params, function(document_symbols)
-      local document_functions = get_cur_document_functions(document_symbols)
-      -- vim.pretty_print(document_functions)
-      local document_functions_with_params = make_params(document_functions)
-      -- vim.pretty_print(document_functions_with_params)
-      do_request(document_functions_with_params)
+  local bufnr = vim.api.nvim_get_current_buf()
+  if lsp_support_method(bufnr, method) then
+    lsp.buf_request_all(bufnr, method, params, function(document_symbols)
+      local symbols = {}
+      symbols["bufnr"] = bufnr
+      symbols["document_symbols"] = document_symbols
+      symbols["document_functions"] = get_cur_document_functions(symbols.document_symbols)
+      symbols["document_functions_with_params"] = make_params(symbols.document_functions)
+      do_request(symbols)
     end)
   end
 end
