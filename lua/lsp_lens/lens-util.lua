@@ -1,6 +1,6 @@
 local lsplens = {}
 local config = require('lsp_lens.config')
--- local utils = require('lsp_lens.utils')
+local utils = require('lsp_lens.utils')
 
 local lsp = vim.lsp
 
@@ -9,17 +9,6 @@ local methods = {
   'textDocument/implementation',
   'textDocument/references',
 }
-
-local function merge_table(tbl1, tbl2)
-  local ret = {}
-  for _, item in pairs(tbl1 or {}) do
-    table.insert(ret, item)
-  end
-  for _, item in pairs(tbl2 or {}) do
-    table.insert(ret, item)
-  end
-  return ret
-end
 
 local function result_count(results)
   local ret = 0
@@ -31,13 +20,22 @@ local function result_count(results)
   return ret
 end
 
+local function requests_done(finished)
+  for _, p in pairs(finished) do
+    if not (p[1] == true and p[2] == true and p[3] == true) then
+      return false
+    end
+  end
+  return true
+end
+
 local function get_functions(result)
   local ret = {}
   for _, v in pairs(result or {}) do
     if v.kind == 12 or v.kind == 6 then
       table.insert(ret, { name = v.name, rangeStart = v.range.start, selectionRangeStart = v.selectionRange.start })
     elseif v.kind == 23 or v.kind == 5 then
-      ret = merge_table(ret, get_functions(v.children))
+      ret = utils:merge_table(ret, get_functions(v.children))
     end
   end
   return ret
@@ -46,7 +44,7 @@ end
 local function get_cur_document_functions(results)
   local ret = {}
   for _, res in pairs(results or {}) do
-    ret = merge_table(ret, get_functions(res.result))
+    ret = utils:merge_table(ret, get_functions(res.result))
   end
   return ret
 end
@@ -82,15 +80,6 @@ local function generate_function_id(function_info)
     "uri=" .. function_info.query_params.textDocument.uri ..
     "character=" .. function_info.selectionRangeStart.character ..
     "line=" .. function_info.selectionRangeStart.line
-end
-
-local function requests_done(finished)
-  for _, p in pairs(finished) do
-    if not (p[1] == true and p[2] == true and p[3] == true) then
-      return false
-    end
-  end
-  return true
 end
 
 local function delete_existing_lines(bufnr, ns_id)
