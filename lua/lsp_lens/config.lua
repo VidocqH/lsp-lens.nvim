@@ -2,6 +2,7 @@
 local M = {}
 
 local defaults = {
+  enable = true,
   include_declaration = false   -- Reference include declaration
 }
 

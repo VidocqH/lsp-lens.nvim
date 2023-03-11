@@ -150,11 +150,22 @@ local function make_params(results)
   return results
 end
 
+function utils:lsp_lens_on()
+  config.config.enable = true
+  utils:procedure()
+end
+
 function utils:lsp_lens_off()
+  config.config.enable = false
   delete_existing_lines(0, vim.api.nvim_create_namespace('lsp-lens'))
 end
 
 function utils:procedure()
+  if config.config.enable == false then
+    utils:lsp_lens_off()
+    return
+  end
+
   local method = 'textDocument/documentSymbol'
   local params = { textDocument = lsp.util.make_text_document_params() }
 
