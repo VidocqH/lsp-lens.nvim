@@ -1,6 +1,6 @@
 local lsplens = {}
-local config = require('lsp_lens.config')
-local utils = require('lsp_lens.utils')
+local config = require('lsp-lens.config')
+local utils = require('lsp-lens.utils')
 
 local lsp = vim.lsp
 
@@ -96,7 +96,7 @@ local function display_lines(bufnr, query_results)
     local virt_lines = {}
     local vline = { {string.rep(" ", query.rangeStart.character) .. create_string(query.counting), "LspLens"} }
     table.insert(virt_lines, vline)
-    vim.api.nvim_buf_set_extmark(bufnr, ns_id, query.rangeStart.line-1, 0, {virt_lines = virt_lines})
+    vim.api.nvim_buf_set_extmark(bufnr, ns_id, query.rangeStart.line - 1, 0, {virt_lines = virt_lines})
   end
 end
 

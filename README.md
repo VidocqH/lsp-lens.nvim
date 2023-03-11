@@ -19,13 +19,13 @@ require("lazy").setup({
 
 ### Usage
 ```lua
-require'lsp_lens'.setup({})
+require'lsp-lens'.setup({})
 ```
 
 ## Configs
 Below is the default config
 ```lua
-require'lsp_lens'.setup({
+require'lsp-lens'.setup({
   enable = true,
   include_declaration = false   -- Reference include declaration
 })

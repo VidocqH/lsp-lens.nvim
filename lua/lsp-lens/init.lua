@@ -1,6 +1,6 @@
-local lens = require('lsp_lens.lens-util')
-local config = require('lsp_lens.config')
-local highlight = require('lsp_lens.highlight')
+local lens = require('lsp-lens.lens-util')
+local config = require('lsp-lens.config')
+local highlight = require('lsp-lens.highlight')
 
 local M = {}
 
