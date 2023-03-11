@@ -30,10 +30,18 @@ require'lsp_lens'.setup({
   include_declaration = false   -- Reference include declaration
 })
 ```
+
 ## Commands
 ```
 :LspLensOn
 :LspLensOff
+```
+
+## Highlight
+```lua
+{
+  LspLens = { link = "Comment" },
+}
 ```
 
 ## Thanks

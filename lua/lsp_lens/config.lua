@@ -3,7 +3,7 @@ local M = {}
 
 local defaults = {
   enable = true,
-  include_declaration = false   -- Reference include declaration
+  include_declaration = false,      -- Reference include declaration
 }
 
 M.config = vim.deepcopy(defaults)

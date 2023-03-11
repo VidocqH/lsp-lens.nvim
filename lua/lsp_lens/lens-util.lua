@@ -86,7 +86,7 @@ local function display_lines(bufnr, query_results)
   delete_existing_lines(bufnr, ns_id)
   for _, query in pairs(query_results) do
     local virt_lines = {}
-    local vline = { {string.rep(" ", query.rangeStart.character) .. create_string(query.counting), "COMMENT"} }
+    local vline = { {string.rep(" ", query.rangeStart.character) .. create_string(query.counting), "LspLens"} }
     table.insert(virt_lines, vline)
     vim.api.nvim_buf_set_extmark(bufnr, ns_id, query.rangeStart.line-1, 0, {virt_lines = virt_lines})
   end
@@ -126,7 +126,6 @@ local function do_request(symbols)
   end
 
   local timer = vim.loop.new_timer()
-  -- local start_request = vim.loop.now()
   timer:start(0, 100, vim.schedule_wrap(function()
     if requests_done(finished) then
       timer:stop()
