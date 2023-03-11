@@ -166,11 +166,10 @@ function utils:procedure()
     return
   end
 
-  local method = 'textDocument/documentSymbol'
-  local params = { textDocument = lsp.util.make_text_document_params() }
-
   local bufnr = vim.api.nvim_get_current_buf()
+  local method = 'textDocument/documentSymbol'
   if lsp_support_method(bufnr, method) then
+    local params = { textDocument = lsp.util.make_text_document_params() }
     lsp.buf_request_all(bufnr, method, params, function(document_symbols)
       local symbols = {}
       symbols["bufnr"] = bufnr
