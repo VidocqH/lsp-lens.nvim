@@ -104,6 +104,12 @@ local function display_lines(bufnr, query_results)
 end
 
 local function do_request(symbols)
+  if not (utils:is_buf_requesting(symbols.bufnr) == -1) then
+    return
+  else
+    utils:set_buf_requesting(symbols.bufnr, 0)
+  end
+
   local functions = symbols.document_functions_with_params
   local finished = {}
 
@@ -150,6 +156,7 @@ local function do_request(symbols)
       timer:stop()
       timer:close()
       display_lines(symbols.bufnr, functions)
+      utils:set_buf_requesting(symbols.bufnr, 1)
     end
   end))
 end
