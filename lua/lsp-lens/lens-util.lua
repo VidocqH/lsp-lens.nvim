@@ -98,7 +98,8 @@ local function display_lines(bufnr, query_results)
     if not (display_str == "") then
       local vline = { {string.rep(" ", query.rangeStart.character) .. display_str, "LspLens"} }
       table.insert(virt_lines, vline)
-      vim.api.nvim_buf_set_extmark(bufnr, ns_id, query.rangeStart.line - 1, 0, {virt_lines = virt_lines})
+      local line = math.max(0, query.rangeStart.line - 1)
+      vim.api.nvim_buf_set_extmark(bufnr, ns_id, line, 0, { virt_lines = virt_lines })
     end
   end
 end
