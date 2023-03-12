@@ -5,8 +5,8 @@ local utils = require('lsp-lens.utils')
 local lsp = vim.lsp
 
 local methods = {
-  'textDocument/definition',
   'textDocument/implementation',
+  'textDocument/definition',
   'textDocument/references',
 }
 
@@ -61,13 +61,13 @@ end
 local function create_string(counting)
   local text = ""
   if counting.definition and counting.definition > 0 then
-    text = text .. "Definition:" .. counting.definition .. " | "
+    text = text .. "Definitions:" .. counting.definition .. " | "
   end
   if counting.implementation and counting.implementation > 0 then
-    text = text .. "Implementation:" .. counting.implementation .. " | "
+    text = text .. "Implements:" .. counting.implementation .. " | "
   end
-  if counting.references and counting.references > 0 then
-    text = text .. "References:" .. counting.references
+  if counting.reference and counting.reference > 0 then
+    text = text .. "References:" .. counting.reference
   end
   if text:sub(-3) == ' | ' then
     text = text:sub(1, -4)
@@ -119,8 +119,8 @@ local function do_request(symbols)
     local params = function_info.query_params
     local counting = {}
 
-    if config.config.sections.implementation == true and lsp_support_method(vim.api.nvim_get_current_buf(), methods[2]) then
-      lsp.buf_request_all(symbols.bufnr, methods[2], params, function(implements)
+    if config.config.sections.implements == true and lsp_support_method(vim.api.nvim_get_current_buf(), methods[1]) then
+      lsp.buf_request_all(symbols.bufnr, methods[1], params, function(implements)
         counting["implementation"] = result_count(implements)
         finished[idx][1] = true
       end)
@@ -129,7 +129,7 @@ local function do_request(symbols)
     end
 
     if config.config.sections.definition == true then
-      lsp.buf_request_all(symbols.bufnr, methods[1], params, function(definition)
+      lsp.buf_request_all(symbols.bufnr, methods[2], params, function(definition)
         counting["definition"] = result_count(definition)
         finished[idx][2] = true
       end)
@@ -139,8 +139,8 @@ local function do_request(symbols)
 
     if config.config.sections.references == true then
       params.context = { includeDeclaration = config.config.include_declaration }
-      lsp.buf_request_all(symbols.bufnr, methods[3], params, function(references)
-        counting["references"] = result_count(references)
+      lsp.buf_request_all(symbols.bufnr, methods[3], params, function(reference)
+        counting["reference"] = result_count(reference)
         finished[idx][3] = true
       end)
     else
