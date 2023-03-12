@@ -7,7 +7,7 @@ local defaults = {
   sections = {                      -- Enable / Disable specific request
     definition = false,
     references = true,
-    implementation = true,
+    implements = true,
   },
 }
 

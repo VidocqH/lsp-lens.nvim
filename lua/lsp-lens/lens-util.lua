@@ -5,8 +5,8 @@ local utils = require('lsp-lens.utils')
 local lsp = vim.lsp
 
 local methods = {
-  'textDocument/definition',
   'textDocument/implementation',
+  'textDocument/definition',
   'textDocument/references',
 }
 
@@ -42,9 +42,14 @@ local function get_functions(result)
   local ret = {}
   for _, v in pairs(result or {}) do
     if v.kind == SymbolKind.Function or v.kind == SymbolKind.Methods or v.kind == SymbolKind.Interface then
-      table.insert(ret, { name = v.name, rangeStart = v.range.start, selectionRangeStart = v.selectionRange.start })
+      table.insert(ret, {
+        name = v.name,
+        rangeStart = v.range.start,
+        selectionRangeStart = v.selectionRange.start,
+        selectionRangeEnd = v.selectionRange["end"],
+      })
     elseif v.kind == SymbolKind.Class or v.kind == SymbolKind.Struct then
-      ret = utils:merge_table(ret, get_functions(v.children))
+      ret = utils:merge_table(ret, get_functions(v.children))   -- Recursively find methods
     end
   end
   return ret
@@ -69,13 +74,13 @@ end
 local function create_string(counting)
   local text = ""
   if counting.definition and counting.definition > 0 then
-    text = text .. "Definition:" .. counting.definition .. " | "
+    text = text .. "Definitions:" .. counting.definition .. " | "
   end
   if counting.implementation and counting.implementation > 0 then
-    text = text .. "Implementation:" .. counting.implementation .. " | "
+    text = text .. "Implements:" .. counting.implementation .. " | "
   end
-  if counting.references and counting.references > 0 then
-    text = text .. "References:" .. counting.references
+  if counting.reference and counting.reference > 0 then
+    text = text .. "References:" .. counting.reference
   end
   if text:sub(-3) == ' | ' then
     text = text:sub(1, -4)
@@ -106,7 +111,8 @@ local function display_lines(bufnr, query_results)
     if not (display_str == "") then
       local vline = { {string.rep(" ", query.rangeStart.character) .. display_str, "LspLens"} }
       table.insert(virt_lines, vline)
-      vim.api.nvim_buf_set_extmark(bufnr, ns_id, query.rangeStart.line - 1, 0, {virt_lines = virt_lines})
+      local line = math.max(0, query.rangeStart.line - 1)
+      vim.api.nvim_buf_set_extmark(bufnr, ns_id, line, 0, { virt_lines = virt_lines })
     end
   end
 end
@@ -127,8 +133,8 @@ local function do_request(symbols)
     local params = function_info.query_params
     local counting = {}
 
-    if config.config.sections.implementation == true and lsp_support_method(vim.api.nvim_get_current_buf(), methods[2]) then
-      lsp.buf_request_all(symbols.bufnr, methods[2], params, function(implements)
+    if config.config.sections.implements == true and lsp_support_method(vim.api.nvim_get_current_buf(), methods[1]) then
+      lsp.buf_request_all(symbols.bufnr, methods[1], params, function(implements)
         counting["implementation"] = result_count(implements)
         finished[idx][1] = true
       end)
@@ -137,7 +143,7 @@ local function do_request(symbols)
     end
 
     if config.config.sections.definition == true then
-      lsp.buf_request_all(symbols.bufnr, methods[1], params, function(definition)
+      lsp.buf_request_all(symbols.bufnr, methods[2], params, function(definition)
         counting["definition"] = result_count(definition)
         finished[idx][2] = true
       end)
@@ -147,8 +153,8 @@ local function do_request(symbols)
 
     if config.config.sections.references == true then
       params.context = { includeDeclaration = config.config.include_declaration }
-      lsp.buf_request_all(symbols.bufnr, methods[3], params, function(references)
-        counting["references"] = result_count(references)
+      lsp.buf_request_all(symbols.bufnr, methods[3], params, function(reference)
+        counting["reference"] = result_count(reference)
         finished[idx][3] = true
       end)
     else
@@ -173,8 +179,8 @@ local function make_params(results)
   for _, query in pairs(results or {}) do
     local params = {
       position = {
-        character = query.selectionRangeStart.character,
-        line = query.selectionRangeStart.line
+        character = query.selectionRangeEnd.character,
+        line = query.selectionRangeEnd.line
       },
       textDocument = lsp.util.make_text_document_params()
     }

@@ -40,5 +40,15 @@ function M:set_buf_requesting(bufnr, method)
   end
 end
 
+---Write table to txt for debugging
+---@param tbl table
+function M:write_table(tbl)
+  local file = io.open("./log.txt", "w")
+  if file then
+    file:write(vim.inspect(tbl))
+    file:close()
+  end
+end
+
 return M
 
