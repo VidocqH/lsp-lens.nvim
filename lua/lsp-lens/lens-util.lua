@@ -55,7 +55,8 @@ local function get_functions(result)
   return ret
 end
 
-local function get_cur_document_functions(results) local ret = {}
+local function get_cur_document_functions(results)
+  local ret = {}
   for _, res in pairs(results or {}) do
     ret = utils:merge_table(ret, get_functions(res.result))
   end
