@@ -27,7 +27,12 @@ Below is the default config
 ```lua
 require'lsp-lens'.setup({
   enable = true,
-  include_declaration = false   -- Reference include declaration
+  include_declaration = false,      -- Reference include declaration
+  sections = {                      -- Enable / Disable specific request
+    definition = false,
+    references = true,
+    implementation = true,
+  },
 })
 ```
 

@@ -94,9 +94,12 @@ local function display_lines(bufnr, query_results)
   delete_existing_lines(bufnr, ns_id)
   for _, query in pairs(query_results or {}) do
     local virt_lines = {}
-    local vline = { {string.rep(" ", query.rangeStart.character) .. create_string(query.counting), "LspLens"} }
-    table.insert(virt_lines, vline)
-    vim.api.nvim_buf_set_extmark(bufnr, ns_id, query.rangeStart.line - 1, 0, {virt_lines = virt_lines})
+    local display_str = create_string(query.counting)
+    if not (display_str == "") then
+      local vline = { {string.rep(" ", query.rangeStart.character) .. display_str, "LspLens"} }
+      table.insert(virt_lines, vline)
+      vim.api.nvim_buf_set_extmark(bufnr, ns_id, query.rangeStart.line - 1, 0, {virt_lines = virt_lines})
+    end
   end
 end
 
@@ -110,7 +113,7 @@ local function do_request(symbols)
     local params = function_info.query_params
     local counting = {}
 
-    if lsp_support_method(vim.api.nvim_get_current_buf(), methods[2]) then
+    if config.config.sections.implementation == true and lsp_support_method(vim.api.nvim_get_current_buf(), methods[2]) then
       lsp.buf_request_all(symbols.bufnr, methods[2], params, function(implements)
         counting["implementation"] = result_count(implements)
         finished[idx][1] = true
@@ -119,22 +122,30 @@ local function do_request(symbols)
       finished[idx][1] = true
     end
 
-    lsp.buf_request_all(symbols.bufnr, methods[1], params, function(definition)
-      counting["definition"] = result_count(definition)
+    if config.config.sections.definition == true then
+      lsp.buf_request_all(symbols.bufnr, methods[1], params, function(definition)
+        counting["definition"] = result_count(definition)
+        finished[idx][2] = true
+      end)
+    else
       finished[idx][2] = true
-    end)
+    end
 
-    params.context = { includeDeclaration = config.config.include_declaration }
-    lsp.buf_request_all(symbols.bufnr, methods[3], params, function(references)
-      counting["references"] = result_count(references)
+    if config.config.sections.references == true then
+      params.context = { includeDeclaration = config.config.include_declaration }
+      lsp.buf_request_all(symbols.bufnr, methods[3], params, function(references)
+        counting["references"] = result_count(references)
+        finished[idx][3] = true
+      end)
+    else
       finished[idx][3] = true
-    end)
+    end
 
     function_info["counting"] = counting
   end
 
   local timer = vim.loop.new_timer()
-  timer:start(0, 100, vim.schedule_wrap(function()
+  timer:start(0, 500, vim.schedule_wrap(function()
     if requests_done(finished) then
       timer:stop()
       timer:close()
