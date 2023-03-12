@@ -167,6 +167,15 @@ function lsplens:lsp_lens_off()
   delete_existing_lines(0, vim.api.nvim_create_namespace('lsp-lens'))
 end
 
+function lsplens:lsp_lens_toggle()
+  if config.config.enable then
+    lsplens:lsp_lens_off()
+  else
+    lsplens:lsp_lens_on()
+  end
+end
+
+
 function lsplens:procedure()
   if config.config.enable == false then
     lsplens:lsp_lens_off()
