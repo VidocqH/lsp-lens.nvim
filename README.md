@@ -35,6 +35,7 @@ require'lsp-lens'.setup({
 ```
 :LspLensOn
 :LspLensOff
+:LspLensToggle
 ```
 
 ## Highlight
