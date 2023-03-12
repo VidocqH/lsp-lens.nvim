@@ -32,10 +32,17 @@ end
 local function get_functions(result)
   local ret = {}
   for _, v in pairs(result or {}) do
+    -- SymbolKind: 12 = Function, 6 = Method
     if v.kind == 12 or v.kind == 6 then
-      table.insert(ret, { name = v.name, rangeStart = v.range.start, selectionRangeStart = v.selectionRange.start })
+      table.insert(ret, {
+        name = v.name,
+        rangeStart = v.range.start,
+        selectionRangeStart = v.selectionRange.start,
+        selectionRangeEnd = v.selectionRange["end"],
+      })
+    -- SymbolKind: 23 = Struct, 5 = Class
     elseif v.kind == 23 or v.kind == 5 then
-      ret = utils:merge_table(ret, get_functions(v.children))
+      ret = utils:merge_table(ret, get_functions(v.children))   -- Recursively find methods
     end
   end
   return ret
@@ -165,8 +172,8 @@ local function make_params(results)
   for _, query in pairs(results or {}) do
     local params = {
       position = {
-        character = query.selectionRangeStart.character,
-        line = query.selectionRangeStart.line
+        character = query.selectionRangeEnd.character,
+        line = query.selectionRangeEnd.line
       },
       textDocument = lsp.util.make_text_document_params()
     }
