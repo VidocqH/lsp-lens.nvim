@@ -29,20 +29,28 @@ local function requests_done(finished)
   return true
 end
 
+-- enum 
+local SymbolKind = {
+	Class = 5,
+	Methods = 6,
+	Interface = 11,
+	Function = 12,
+	Struct = 23,
+}
+
 local function get_functions(result)
   local ret = {}
   for _, v in pairs(result or {}) do
-    if v.kind == 12 or v.kind == 6 then
+    if v.kind == SymbolKind.Function or v.kind == SymbolKind.Methods or v.kind == SymbolKind.Interface then
       table.insert(ret, { name = v.name, rangeStart = v.range.start, selectionRangeStart = v.selectionRange.start })
-    elseif v.kind == 23 or v.kind == 5 then
+    elseif v.kind == SymbolKind.Class or v.kind == SymbolKind.Struct then
       ret = utils:merge_table(ret, get_functions(v.children))
     end
   end
   return ret
 end
 
-local function get_cur_document_functions(results)
-  local ret = {}
+local function get_cur_document_functions(results) local ret = {}
   for _, res in pairs(results or {}) do
     ret = utils:merge_table(ret, get_functions(res.result))
   end
