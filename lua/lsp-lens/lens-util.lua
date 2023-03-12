@@ -29,19 +29,26 @@ local function requests_done(finished)
   return true
 end
 
+-- enum 
+local SymbolKind = {
+	Class = 5,
+	Methods = 6,
+	Interface = 11,
+	Function = 12,
+	Struct = 23,
+}
+
 local function get_functions(result)
   local ret = {}
   for _, v in pairs(result or {}) do
-    -- SymbolKind: 12 = Function, 6 = Method
-    if v.kind == 12 or v.kind == 6 then
+    if v.kind == SymbolKind.Function or v.kind == SymbolKind.Methods or v.kind == SymbolKind.Interface then
       table.insert(ret, {
         name = v.name,
         rangeStart = v.range.start,
         selectionRangeStart = v.selectionRange.start,
         selectionRangeEnd = v.selectionRange["end"],
       })
-    -- SymbolKind: 23 = Struct, 5 = Class
-    elseif v.kind == 23 or v.kind == 5 then
+    elseif v.kind == SymbolKind.Class or v.kind == SymbolKind.Struct then
       ret = utils:merge_table(ret, get_functions(v.children))   -- Recursively find methods
     end
   end
