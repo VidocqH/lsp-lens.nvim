@@ -3,7 +3,7 @@ local M = {}
 
 local function default_hl()
 	return {
-		LspLens = { link = "Comment", default = true },
+		LspLens = { link = "LspCodeLens", default = true },
 	}
 end
 
