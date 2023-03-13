@@ -50,5 +50,8 @@ require'lsp-lens'.setup({
 }
 ```
 
+## Known Bug
++ Due to a [known issue](https://github.com/neovim/neovim/issues/16166) with the neovim `nvim_buf_set_extmark()` api, the function and method defined on the first line of the code may cause the len to display at the -1 index line, which is not visible.
+
 ## Thanks
 [lspsaga by glepnir](https://github.com/glepnir/lspsaga.nvim#customize-appearance)
