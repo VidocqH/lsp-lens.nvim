@@ -9,6 +9,9 @@ local defaults = {
     references = true,
     implements = true,
   },
+  ignore_filetype = {
+    "prisma",
+  },
 }
 
 M.config = vim.deepcopy(defaults)

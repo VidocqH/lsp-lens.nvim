@@ -40,6 +40,18 @@ function M:set_buf_requesting(bufnr, method)
   end
 end
 
+---@param tbl table
+---@param target any
+---return boolean isFind
+function M:table_find(tbl, target)
+  for _, val in pairs(tbl) do
+    if (val == target) then
+      return true
+    end
+  end
+  return false
+end
+
 ---Write table to txt for debugging
 ---@param tbl table
 function M:write_table(tbl)

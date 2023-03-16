@@ -209,7 +209,6 @@ function lsplens:lsp_lens_toggle()
   end
 end
 
-
 function lsplens:procedure()
   if config.config.enable == false then
     lsplens:lsp_lens_off()
@@ -217,10 +216,17 @@ function lsplens:procedure()
   end
 
   local bufnr = vim.api.nvim_get_current_buf()
+
+  -- Ignored Filetype
+  if utils:table_find(config.config.ignore_filetype, vim.api.nvim_buf_get_option(bufnr, 'filetype')) then
+    return
+  end
+
   local method = 'textDocument/documentSymbol'
   if lsp_support_method(bufnr, method) then
     local params = { textDocument = lsp.util.make_text_document_params() }
     lsp.buf_request_all(bufnr, method, params, function(document_symbols)
+      -- vim.pretty_print(lsp.buf_request_sync(0, "textDocument/codeLens", document_symbols, 1000))
       local symbols = {}
       symbols["bufnr"] = bufnr
       symbols["document_symbols"] = document_symbols
