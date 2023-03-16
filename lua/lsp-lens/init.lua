@@ -14,7 +14,7 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("LspLensOff", lens.lsp_lens_off, {})
   vim.api.nvim_create_user_command("LspLensToggle", lens.lsp_lens_toggle, {})
 
-  vim.api.nvim_create_autocmd({ "LspAttach", "InsertLeave", "TextChanged", "BufEnter" }, {
+  vim.api.nvim_create_autocmd({ "LspAttach", "TextChanged", "BufEnter" }, {
     group = augroup,
     callback = lens.procedure
   })
