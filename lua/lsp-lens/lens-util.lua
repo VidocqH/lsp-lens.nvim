@@ -170,7 +170,9 @@ local function do_request(symbols)
   local timer = vim.loop.new_timer()
   timer:start(0, 500, vim.schedule_wrap(function()
     if requests_done(finished) then
-      timer:close()
+      if timer ~= nil then
+        timer:close()
+      end
       display_lines(symbols.bufnr, functions)
       utils:set_buf_requesting(symbols.bufnr, 1)
     end
