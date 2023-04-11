@@ -103,6 +103,24 @@ local function delete_existing_lines(bufnr, ns_id)
   end
 end
 
+local function normalize_rangeStart_character(bufnr, query)
+  local clients = vim.lsp.get_active_clients { bufnr = bufnr, name = 'lua_ls' }
+  if vim.tbl_isempty(clients) then
+    return
+  end
+
+  local str = 'local '
+
+  local line = vim.api.nvim_buf_get_lines(bufnr, query.line, query.line + 1, true)[1]
+  local indent = line:match('^%s+')
+  indent = indent and indent:len() or 0
+  local trimmed = vim.trim(line)
+
+  if trimmed:sub(1, str:len()) == str then
+    query.character = indent + query.character - str:len()
+  end
+end
+
 local function display_lines(bufnr, query_results)
   local ns_id = vim.api.nvim_create_namespace('lsp-lens')
   delete_existing_lines(bufnr, ns_id)
@@ -110,6 +128,7 @@ local function display_lines(bufnr, query_results)
     local virt_lines = {}
     local display_str = create_string(query.counting)
     if not (display_str == "") then
+      normalize_rangeStart_character(bufnr, query.rangeStart)
       local vline = { {string.rep(" ", query.rangeStart.character) .. display_str, "LspLens"} }
       table.insert(virt_lines, vline)
       vim.api.nvim_buf_set_extmark(bufnr, ns_id, query.rangeStart.line, 0, {
