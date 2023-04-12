@@ -131,10 +131,12 @@ local function display_lines(bufnr, query_results)
       normalize_rangeStart_character(bufnr, query.rangeStart)
       local vline = { {string.rep(" ", query.rangeStart.character) .. display_str, "LspLens"} }
       table.insert(virt_lines, vline)
-      vim.api.nvim_buf_set_extmark(bufnr, ns_id, query.rangeStart.line, 0, {
-        virt_lines = virt_lines,
-        virt_lines_above = true
-      })
+      if (query.rangeStart.line < vim.api.nvim_buf_line_count(bufnr)) then
+        vim.api.nvim_buf_set_extmark(bufnr, ns_id, query.rangeStart.line, 0, {
+          virt_lines = virt_lines,
+          virt_lines_above = true
+        })
+      end
     end
   end
 end
