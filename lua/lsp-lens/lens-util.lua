@@ -111,7 +111,12 @@ local function normalize_rangeStart_character(bufnr, query)
 
   local str = 'local '
 
-  local line = vim.api.nvim_buf_get_lines(bufnr, query.line, query.line + 1, true)[1]
+  local lines = vim.api.nvim_buf_get_lines(bufnr, query.line, query.line + 1, true)
+  if #lines == 0 then
+    return
+  end
+  local line = lines[1]
+
   local indent = line:match('^%s+')
   indent = indent and indent:len() or 0
   local trimmed = vim.trim(line)
