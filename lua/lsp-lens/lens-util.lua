@@ -42,12 +42,14 @@ local function get_functions(result)
   local ret = {}
   for _, v in pairs(result or {}) do
     if v.kind == SymbolKind.Function or v.kind == SymbolKind.Methods or v.kind == SymbolKind.Interface then
-      table.insert(ret, {
-        name = v.name,
-        rangeStart = v.range.start,
-        selectionRangeStart = v.selectionRange.start,
-        selectionRangeEnd = v.selectionRange["end"],
-      })
+      if v.range and v.range.start then
+        table.insert(ret, {
+          name = v.name,
+          rangeStart = v.range.start,
+          selectionRangeStart = v.selectionRange.start,
+          selectionRangeEnd = v.selectionRange["end"],
+        })
+      end
     elseif v.kind == SymbolKind.Class or v.kind == SymbolKind.Struct then
       ret = utils:merge_table(ret, get_functions(v.children))   -- Recursively find methods
     end
