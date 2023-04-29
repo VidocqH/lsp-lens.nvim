@@ -164,7 +164,7 @@ local function do_request(symbols)
     local params = function_info.query_params
     local counting = {}
 
-    if config.config.sections.implements == true and lsp_support_method(vim.api.nvim_get_current_buf(), methods[1]) then
+    if config.config.sections.implements == true and lsp_support_method(symbols.bufnr, methods[1]) then
       lsp.buf_request_all(symbols.bufnr, methods[1], params, function(implements)
         counting["implementation"] = result_count(implements)
         finished[idx][1] = true
@@ -173,7 +173,7 @@ local function do_request(symbols)
       finished[idx][1] = true
     end
 
-    if config.config.sections.definition == true then
+    if config.config.sections.definition == true and lsp_support_method(symbols.bufnr, methods[2]) then
       lsp.buf_request_all(symbols.bufnr, methods[2], params, function(definition)
         counting["definition"] = result_count(definition)
         finished[idx][2] = true
@@ -182,7 +182,7 @@ local function do_request(symbols)
       finished[idx][2] = true
     end
 
-    if config.config.sections.references == true then
+    if config.config.sections.references == true and lsp_support_method(symbols.bufnr, methods[3]) then
       params.context = { includeDeclaration = config.config.include_declaration }
       lsp.buf_request_all(symbols.bufnr, methods[3], params, function(reference)
         counting["reference"] = result_count(reference)
