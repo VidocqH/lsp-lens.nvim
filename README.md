@@ -37,7 +37,7 @@ require'lsp-lens'.setup({
   sections = {                      -- Enable / Disable specific request
     definition = false,
     references = true,
-    implementation = true,
+    implements = true,
   },
   ignore_filetype = {
     "prisma",
