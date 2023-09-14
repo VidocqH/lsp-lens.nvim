@@ -75,20 +75,31 @@ local function lsp_support_method(buf, method)
 end
 
 local function create_string(counting)
+  local cfg = config.config
+
   local text = ""
-  if counting.definition and counting.definition > 0 then
-    text = text .. "Definitions:" .. counting.definition .. " | "
+  local is_empty = true
+
+  local function get_separator()
+    return is_empty and "" or cfg.separator
   end
-  if counting.implementation and counting.implementation > 0 then
-    text = text .. "Implements:" .. counting.implementation .. " | "
+
+  if counting.reference then
+    text = text .. cfg.sections.references(counting.reference)
+    is_empty = false
   end
-  if counting.reference and counting.reference > 0 then
-    text = text .. "References:" .. counting.reference
+
+  if counting.definition then
+    text = text .. get_separator() .. cfg.sections.definition(counting.definition)
+    is_empty = false
   end
-  if text:sub(-3) == ' | ' then
-    text = text:sub(1, -4)
+
+  if counting.implementation then
+    text =  text .. get_separator() .. cfg.sections.implements(counting.implementation)
+    is_empty = false
   end
-  return text
+
+  return is_empty and "" or cfg.decorator(text)
 end
 
 local function generate_function_id(function_info)
@@ -106,7 +117,8 @@ local function delete_existing_lines(bufnr, ns_id)
 end
 
 local function normalize_rangeStart_character(bufnr, query)
-  local clients = vim.lsp.get_active_clients { bufnr = bufnr, name = 'lua_ls' }
+  local clients = vim.lsp.get_active_clients{ bufnr = bufnr, name = 'lua_ls' }
+
   if vim.tbl_isempty(clients) then
     return
   end
@@ -134,16 +146,20 @@ local function display_lines(bufnr, query_results)
   for _, query in pairs(query_results or {}) do
     local virt_lines = {}
     local display_str = create_string(query.counting)
+
     if not (display_str == "") then
       normalize_rangeStart_character(bufnr, query.rangeStart)
+
       local vline = { {string.rep(" ", query.rangeStart.character) .. display_str, "LspLens"} }
       table.insert(virt_lines, vline)
+
       if (query.rangeStart.line < vim.api.nvim_buf_line_count(bufnr)) then
         vim.api.nvim_buf_set_extmark(bufnr, ns_id, query.rangeStart.line, 0, {
           virt_lines = virt_lines,
           virt_lines_above = true
         })
       end
+
     end
   end
 end
@@ -164,7 +180,7 @@ local function do_request(symbols)
     local params = function_info.query_params
     local counting = {}
 
-    if config.config.sections.implements == true and lsp_support_method(symbols.bufnr, methods[1]) then
+    if config.config.sections.implements and lsp_support_method(symbols.bufnr, methods[1]) then
       lsp.buf_request_all(symbols.bufnr, methods[1], params, function(implements)
         counting["implementation"] = result_count(implements)
         finished[idx][1] = true
@@ -173,7 +189,7 @@ local function do_request(symbols)
       finished[idx][1] = true
     end
 
-    if config.config.sections.definition == true and lsp_support_method(symbols.bufnr, methods[2]) then
+    if config.config.sections.definition and lsp_support_method(symbols.bufnr, methods[2]) then
       lsp.buf_request_all(symbols.bufnr, methods[2], params, function(definition)
         counting["definition"] = result_count(definition)
         finished[idx][2] = true
@@ -182,7 +198,7 @@ local function do_request(symbols)
       finished[idx][2] = true
     end
 
-    if config.config.sections.references == true and lsp_support_method(symbols.bufnr, methods[3]) then
+    if config.config.sections.references and lsp_support_method(symbols.bufnr, methods[3]) then
       params.context = { includeDeclaration = config.config.include_declaration }
       lsp.buf_request_all(symbols.bufnr, methods[3], params, function(reference)
         counting["reference"] = result_count(reference)

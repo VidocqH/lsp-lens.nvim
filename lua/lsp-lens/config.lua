@@ -1,14 +1,21 @@
-
 local M = {}
 
 local defaults = {
   enable = true,
-  include_declaration = false,      -- Reference include declaration
-  sections = {                      -- Enable / Disable specific request
-    definition = false,
-    references = true,
-    implements = true,
+  include_declaration = false, -- Reference include declaration
+  sections = {
+    definition = function(count)
+      return "Definitions: " .. count
+    end,
+    references = function(count)
+      return "References: " .. count
+    end,
+    implements = function(count)
+      return "Implements: " .. count
+    end,
   },
+  separator = " | ",
+  decorator = function(line) return line end,
   ignore_filetype = {
     "prisma",
   },
@@ -22,4 +29,3 @@ function M.setup(opts)
 end
 
 return M
-
