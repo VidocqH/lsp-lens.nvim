@@ -3,6 +3,7 @@ local M = {}
 local defaults = {
   enable = true,
   include_declaration = false, -- Reference include declaration
+  hide_zero_counts = true, -- Hide lsp sections which have no content
   sections = {
     definition = function(count)
       return "Definitions: " .. count

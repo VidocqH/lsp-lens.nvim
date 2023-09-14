@@ -76,30 +76,34 @@ end
 
 local function create_string(counting)
   local cfg = config.config
-
   local text = ""
-  local is_empty = true
 
-  local function get_separator()
-    return is_empty and "" or cfg.separator
+  local function append_with(count, fn)
+    if fn == nil or (cfg.hide_zero_counts and count == 0) then
+      return
+    end
+
+    local formatted = fn(count)
+    if formatted == nil or formatted == "" then
+      return
+    end
+
+    text = text == "" and formatted or text .. cfg.separator .. formatted
   end
 
   if counting.reference then
-    text = text .. cfg.sections.references(counting.reference)
-    is_empty = false
+    append_with(counting.reference, cfg.sections.references)
   end
 
   if counting.definition then
-    text = text .. get_separator() .. cfg.sections.definition(counting.definition)
-    is_empty = false
+    append_with(counting.definition, cfg.sections.definition)
   end
 
   if counting.implementation then
-    text =  text .. get_separator() .. cfg.sections.implements(counting.implementation)
-    is_empty = false
+    append_with(counting.implementation, cfg.sections.implements)
   end
 
-  return is_empty and "" or cfg.decorator(text)
+  return text == "" and "" or cfg.decorator(text)
 end
 
 local function generate_function_id(function_info)
