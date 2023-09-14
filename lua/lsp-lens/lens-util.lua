@@ -66,7 +66,7 @@ local function get_cur_document_functions(results)
 end
 
 local function lsp_support_method(buf, method)
-  for _, client in pairs(lsp.get_active_clients({ bufnr = buf })) do
+  for _, client in pairs(lsp.get_clients({ bufnr = buf })) do
     if client.supports_method(method) then
       return true
     end
@@ -117,7 +117,7 @@ local function delete_existing_lines(bufnr, ns_id)
 end
 
 local function normalize_rangeStart_character(bufnr, query)
-  local clients = vim.lsp.get_active_clients{ bufnr = bufnr, name = 'lua_ls' }
+  local clients = vim.lsp.get_clients{ bufnr = bufnr, name = 'lua_ls' }
 
   if vim.tbl_isempty(clients) then
     return
