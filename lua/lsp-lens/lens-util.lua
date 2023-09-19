@@ -3,7 +3,12 @@ local config = require('lsp-lens.config')
 local utils = require('lsp-lens.utils')
 
 local lsp = vim.lsp
-local lsp_get_clients_method = vim.version().api_level >= 10 and lsp.get_clients or lsp.get_active_clients
+local lsp_get_clients_method
+if (vim.version().minor >= 10) then
+  lsp_get_clients_method = lsp.get_clients
+else
+  lsp_get_clients_method = lsp.get_active_clients
+end
 
 local methods = {
   'textDocument/implementation',
