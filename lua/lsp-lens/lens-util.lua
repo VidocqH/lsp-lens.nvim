@@ -3,6 +3,7 @@ local config = require('lsp-lens.config')
 local utils = require('lsp-lens.utils')
 
 local lsp = vim.lsp
+local lsp_get_clients_method = vim.version().api_level >= 10 and lsp.get_clients or lsp.get_active_clients
 
 local methods = {
   'textDocument/implementation',
@@ -66,7 +67,7 @@ local function get_cur_document_functions(results)
 end
 
 local function lsp_support_method(buf, method)
-  for _, client in pairs(lsp.get_clients({ bufnr = buf })) do
+  for _, client in pairs(lsp_get_clients_method({ bufnr = buf })) do
     if client.supports_method(method) then
       return true
     end
@@ -121,7 +122,7 @@ local function delete_existing_lines(bufnr, ns_id)
 end
 
 local function normalize_rangeStart_character(bufnr, query)
-  local clients = vim.lsp.get_clients{ bufnr = bufnr, name = 'lua_ls' }
+  local clients = lsp_get_clients_method({ bufnr = bufnr, name = 'lua_ls' })
 
   if vim.tbl_isempty(clients) then
     return
