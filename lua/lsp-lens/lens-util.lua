@@ -1,19 +1,19 @@
 local lsplens = {}
-local config = require('lsp-lens.config')
-local utils = require('lsp-lens.utils')
+local config = require("lsp-lens.config")
+local utils = require("lsp-lens.utils")
 
 local lsp = vim.lsp
 local lsp_get_clients_method
-if (vim.version().minor >= 10) then
+if vim.version().minor >= 10 then
   lsp_get_clients_method = lsp.get_clients
 else
   lsp_get_clients_method = lsp.get_active_clients
 end
 
 local methods = {
-  'textDocument/implementation',
-  'textDocument/definition',
-  'textDocument/references',
+  "textDocument/implementation",
+  "textDocument/definition",
+  "textDocument/references",
 }
 
 local function result_count(results)
@@ -35,13 +35,13 @@ local function requests_done(finished)
   return true
 end
 
--- enum 
+-- enum
 local SymbolKind = {
-	Class = 5,
-	Methods = 6,
-	Interface = 11,
-	Function = 12,
-	Struct = 23,
+  Class = 5,
+  Methods = 6,
+  Interface = 11,
+  Function = 12,
+  Struct = 23,
 }
 
 local function get_functions(result)
@@ -57,7 +57,7 @@ local function get_functions(result)
         })
       end
     elseif v.kind == SymbolKind.Class or v.kind == SymbolKind.Struct then
-      ret = utils:merge_table(ret, get_functions(v.children))   -- Recursively find methods
+      ret = utils:merge_table(ret, get_functions(v.children)) -- Recursively find methods
     end
   end
   return ret
@@ -113,10 +113,13 @@ local function create_string(counting)
 end
 
 local function generate_function_id(function_info)
-  return function_info.name ..
-    "uri=" .. function_info.query_params.textDocument.uri ..
-    "character=" .. function_info.selectionRangeStart.character ..
-    "line=" .. function_info.selectionRangeStart.line
+  return function_info.name
+    .. "uri="
+    .. function_info.query_params.textDocument.uri
+    .. "character="
+    .. function_info.selectionRangeStart.character
+    .. "line="
+    .. function_info.selectionRangeStart.line
 end
 
 local function delete_existing_lines(bufnr, ns_id)
@@ -127,13 +130,13 @@ local function delete_existing_lines(bufnr, ns_id)
 end
 
 local function normalize_rangeStart_character(bufnr, query)
-  local clients = lsp_get_clients_method({ bufnr = bufnr, name = 'lua_ls' })
+  local clients = lsp_get_clients_method({ bufnr = bufnr, name = "lua_ls" })
 
   if vim.tbl_isempty(clients) then
     return
   end
 
-  local str = 'local '
+  local str = "local "
 
   local lines = vim.api.nvim_buf_get_lines(bufnr, query.line, query.line + 1, true)
   if #lines == 0 then
@@ -141,7 +144,7 @@ local function normalize_rangeStart_character(bufnr, query)
   end
   local line = lines[1]
 
-  local indent = line:match('^%s+')
+  local indent = line:match("^%s+")
   indent = indent and indent:len() or 0
   local trimmed = vim.trim(line)
 
@@ -151,7 +154,7 @@ local function normalize_rangeStart_character(bufnr, query)
 end
 
 local function display_lines(bufnr, query_results)
-  local ns_id = vim.api.nvim_create_namespace('lsp-lens')
+  local ns_id = vim.api.nvim_create_namespace("lsp-lens")
   delete_existing_lines(bufnr, ns_id)
   for _, query in pairs(query_results or {}) do
     local virt_lines = {}
@@ -160,16 +163,15 @@ local function display_lines(bufnr, query_results)
     if not (display_str == "") then
       normalize_rangeStart_character(bufnr, query.rangeStart)
 
-      local vline = { {string.rep(" ", query.rangeStart.character) .. display_str, "LspLens"} }
+      local vline = { { string.rep(" ", query.rangeStart.character) .. display_str, "LspLens" } }
       table.insert(virt_lines, vline)
 
-      if (query.rangeStart.line < vim.api.nvim_buf_line_count(bufnr)) then
+      if query.rangeStart.line < vim.api.nvim_buf_line_count(bufnr) then
         vim.api.nvim_buf_set_extmark(bufnr, ns_id, query.rangeStart.line, 0, {
           virt_lines = virt_lines,
-          virt_lines_above = true
+          virt_lines_above = true,
         })
       end
-
     end
   end
 end
@@ -222,15 +224,19 @@ local function do_request(symbols)
   end
 
   local timer = vim.loop.new_timer()
-  timer:start(0, 500, vim.schedule_wrap(function()
-    if requests_done(finished) then
-      if timer ~= nil and timer:is_closing() == false then
-        timer:close()
+  timer:start(
+    0,
+    500,
+    vim.schedule_wrap(function()
+      if requests_done(finished) then
+        if timer ~= nil and timer:is_closing() == false then
+          timer:close()
+        end
+        display_lines(symbols.bufnr, functions)
+        utils:set_buf_requesting(symbols.bufnr, 1)
       end
-      display_lines(symbols.bufnr, functions)
-      utils:set_buf_requesting(symbols.bufnr, 1)
-    end
-  end))
+    end)
+  )
 end
 
 local function make_params(results)
@@ -238,9 +244,9 @@ local function make_params(results)
     local params = {
       position = {
         character = query.selectionRangeEnd.character,
-        line = query.selectionRangeEnd.line
+        line = query.selectionRangeEnd.line,
       },
-      textDocument = lsp.util.make_text_document_params()
+      textDocument = lsp.util.make_text_document_params(),
     }
     query.query_params = params
   end
@@ -254,7 +260,7 @@ end
 
 function lsplens:lsp_lens_off()
   config.config.enable = false
-  delete_existing_lines(0, vim.api.nvim_create_namespace('lsp-lens'))
+  delete_existing_lines(0, vim.api.nvim_create_namespace("lsp-lens"))
 end
 
 function lsplens:lsp_lens_toggle()
@@ -274,11 +280,11 @@ function lsplens:procedure()
   local bufnr = vim.api.nvim_get_current_buf()
 
   -- Ignored Filetype
-  if utils:table_find(config.config.ignore_filetype, vim.api.nvim_buf_get_option(bufnr, 'filetype')) then
+  if utils:table_find(config.config.ignore_filetype, vim.api.nvim_buf_get_option(bufnr, "filetype")) then
     return
   end
 
-  local method = 'textDocument/documentSymbol'
+  local method = "textDocument/documentSymbol"
   if lsp_support_method(bufnr, method) then
     local params = { textDocument = lsp.util.make_text_document_params() }
     lsp.buf_request_all(bufnr, method, params, function(document_symbols)

@@ -3,7 +3,7 @@ local M = {}
 local defaults = {
   enable = true,
   include_declaration = false, -- Reference include declaration
-  hide_zero_counts = true, -- Hide lsp sections which have no content
+  hide_zero_counts = true,    -- Hide lsp sections which have no content
   sections = {
     definition = function(count)
       return "Definitions: " .. count
@@ -16,7 +16,9 @@ local defaults = {
     end,
   },
   separator = " | ",
-  decorator = function(line) return line end,
+  decorator = function(line)
+    return line
+  end,
   ignore_filetype = {
     "prisma",
   },
@@ -26,7 +28,7 @@ M.config = vim.deepcopy(defaults)
 
 function M.setup(opts)
   opts = opts or {}
-  M.config = vim.tbl_deep_extend('force', defaults, opts)
+  M.config = vim.tbl_deep_extend("force", defaults, opts)
 end
 
 return M
