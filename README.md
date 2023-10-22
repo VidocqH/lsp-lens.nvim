@@ -34,7 +34,7 @@ Below is the default config
 require'lsp-lens'.setup({
   enable = true,
   include_declaration = false,      -- Reference include declaration
-  sections = {                      -- Enable / Disable specific request
+  sections = {                      -- Enable / Disable specific request, formatter example looks 'Format Requests'
     definition = false,
     references = true,
     implements = true,
@@ -43,6 +43,25 @@ require'lsp-lens'.setup({
     "prisma",
   },
 })
+```
+
+### Format Requests
+
+```lua
+require'lsp-lens'.setup({
+  sections = {
+    definition = function(count)
+        return "Definitions: " .. count
+    end,
+    references = function(count)
+        return "References: " .. count
+    end,
+    implements = function(count)
+        return "Implements: " .. count
+    end,
+  }
+})
+
 ```
 
 ## Commands
@@ -62,7 +81,8 @@ require'lsp-lens'.setup({
 ```
 
 ## Known Bug
-+ Due to a [known issue](https://github.com/neovim/neovim/issues/16166) with the neovim `nvim_buf_set_extmark()` api, the function and method defined on the first line of the code may cause the len to display at the -1 index line, which is not visible.
+
+- Due to a [known issue](https://github.com/neovim/neovim/issues/16166) with the neovim `nvim_buf_set_extmark()` api, the function and method defined on the first line of the code may cause the len to display at the -1 index line, which is not visible.
 
 ## Thanks
 
