@@ -1,10 +1,10 @@
-local lens = require('lsp-lens.lens-util')
-local config = require('lsp-lens.config')
-local highlight = require('lsp-lens.highlight')
+local lens = require("lsp-lens.lens-util")
+local config = require("lsp-lens.config")
+local highlight = require("lsp-lens.highlight")
 
 local M = {}
 
-local augroup = vim.api.nvim_create_augroup('lsp_lens', {clear = true})
+local augroup = vim.api.nvim_create_augroup("lsp_lens", { clear = true })
 
 function M.setup(opts)
   config.setup(opts)
@@ -16,7 +16,7 @@ function M.setup(opts)
 
   vim.api.nvim_create_autocmd({ "LspAttach", "TextChanged", "BufEnter" }, {
     group = augroup,
-    callback = lens.procedure
+    callback = lens.procedure,
   })
 end
 
