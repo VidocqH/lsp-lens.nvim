@@ -52,6 +52,7 @@ local function get_functions(result)
         table.insert(ret, {
           name = v.name,
           rangeStart = v.range.start,
+          rangeEnd = v.range["end"],
           selectionRangeStart = v.selectionRange.start,
           selectionRangeEnd = v.selectionRange["end"],
         })
@@ -84,6 +85,7 @@ local function create_string(counting)
   local cfg = config.config
   local text = ""
 
+  -- TODO: refactor
   local function append_with(count, fn)
     if fn == nil or (cfg.hide_zero_counts and count == 0) then
       return
@@ -107,6 +109,13 @@ local function create_string(counting)
 
   if counting.implementation then
     append_with(counting.implementation, cfg.sections.implements)
+  end
+
+  if counting.git_authors then
+    if not (cfg.sections.git_authors == nil or (cfg.hide_zero_counts and counting.git_authors.count == 0)) then
+      local formatted = cfg.sections.git_authors(counting.git_authors.latest_author, counting.git_authors.count)
+      text = text == "" and formatted or text .. cfg.separator .. formatted
+    end
   end
 
   return text == "" and "" or cfg.decorator(text)
@@ -176,6 +185,46 @@ local function display_lines(bufnr, query_results)
   end
 end
 
+local function get_recent_editor(start_row, end_row, callback)
+  local file_path = vim.fn.expand("%:p")
+
+  local stdout = vim.loop.new_pipe()
+  if stdout == nil then
+    return
+  end
+
+  local authors = {}
+  local most_recent_editor = nil
+  vim.loop.spawn("git", {
+    args = { "blame", "-L", start_row .. "," .. end_row, "--incremental", file_path },
+    stdio = { nil, stdout, nil },
+  }, function(_, _)
+    local authors_arr = {}
+    for author_name, _ in pairs(authors) do
+      table.insert(authors_arr, author_name)
+    end
+    callback(most_recent_editor, authors_arr)
+  end)
+  vim.loop.read_start(stdout, function(err, data)
+    if data == nil then
+      return
+    end
+
+    for line in string.gmatch(data, "[^\r\n]+") do
+      local space_pos = string.find(line, " ")
+      local key = string.sub(line, 1, space_pos - 1)
+      local val = string.sub(line, space_pos + 1)
+      if key == "author" then
+        -- if key == "author" or key == "committer" then
+        authors[val] = true
+        if most_recent_editor == nil then
+          most_recent_editor = val
+        end
+      end
+    end
+  end)
+end
+
 local function do_request(symbols)
   if not (utils:is_buf_requesting(symbols.bufnr) == -1) then
     return
@@ -187,7 +236,7 @@ local function do_request(symbols)
   local finished = {}
 
   for idx, function_info in pairs(functions or {}) do
-    table.insert(finished, { false, false, false })
+    table.insert(finished, { false, false, false, false })
 
     local params = function_info.query_params
     local counting = {}
@@ -218,6 +267,19 @@ local function do_request(symbols)
       end)
     else
       finished[idx][3] = true
+    end
+
+    if config.config.sections.git_authors then
+      get_recent_editor(
+        function_info.rangeStart.line + 1,
+        function_info.rangeEnd.line + 1,
+        function(latest_author, authors)
+          counting["git_authors"] = { latest_author = latest_author, count = #authors }
+          finished[idx][4] = true
+        end
+      )
+    else
+      finished[idx][4] = true
     end
 
     function_info["counting"] = counting

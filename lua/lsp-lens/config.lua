@@ -14,6 +14,9 @@ local defaults = {
     implements = function(count)
       return "Implements: " .. count
     end,
+    git_authors = function(latest_author, count)
+      return " " .. latest_author .. (count - 1 == 0 and "" or (" + " .. count - 1))
+    end,
   },
   separator = " | ",
   decorator = function(line)
