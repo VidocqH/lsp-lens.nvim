@@ -212,13 +212,15 @@ local function get_recent_editor(start_row, end_row, callback)
 
     for line in string.gmatch(data, "[^\r\n]+") do
       local space_pos = string.find(line, " ")
-      local key = string.sub(line, 1, space_pos - 1)
-      local val = string.sub(line, space_pos + 1)
-      if key == "author" then
-        -- if key == "author" or key == "committer" then
-        authors[val] = true
-        if most_recent_editor == nil then
-          most_recent_editor = val
+      if space_pos ~= nil then
+        local key = string.sub(line, 1, space_pos - 1)
+        local val = string.sub(line, space_pos + 1)
+        if key == "author" then
+          -- if key == "author" or key == "committer" then
+          authors[val] = true
+          if most_recent_editor == nil then
+            most_recent_editor = val
+          end
         end
       end
     end
