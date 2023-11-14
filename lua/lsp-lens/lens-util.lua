@@ -35,19 +35,10 @@ local function requests_done(finished)
   return true
 end
 
--- enum
-local SymbolKind = {
-  Class = 5,
-  Methods = 6,
-  Interface = 11,
-  Function = 12,
-  Struct = 23,
-}
-
 local function get_functions(result)
   local ret = {}
   for _, v in pairs(result or {}) do
-    if v.kind == SymbolKind.Function or v.kind == SymbolKind.Methods or v.kind == SymbolKind.Interface then
+    if vim.tbl_contains(config.config.target_symbol_kinds, v.kind) then
       if v.range and v.range.start then
         table.insert(ret, {
           name = v.name,
@@ -57,7 +48,9 @@ local function get_functions(result)
           selectionRangeEnd = v.selectionRange["end"],
         })
       end
-    elseif v.kind == SymbolKind.Class or v.kind == SymbolKind.Struct then
+    end
+
+    if vim.tbl_contains(config.config.wrapper_symbol_kinds, v.kind) then
       ret = utils:merge_table(ret, get_functions(v.children)) -- Recursively find methods
     end
   end
