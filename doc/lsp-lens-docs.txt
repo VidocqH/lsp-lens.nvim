@@ -1,4 +1,4 @@
-*lsp-lens-docs.txt*      For Neovim >= 0.8.0      Last change: 2023 October 31
+*lsp-lens-docs.txt*      For Neovim >= 0.8.0     Last change: 2023 November 14
 
 ==============================================================================
 Table of Contents                            *lsp-lens-docs-table-of-contents*
@@ -52,6 +52,7 @@ Below is the default config
 
 >lua
     local SymbolKind = vim.lsp.protocol.SymbolKind
+    
     require'lsp-lens'.setup({
       enable = true,
       include_declaration = false,      -- Reference include declaration
