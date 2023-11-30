@@ -156,6 +156,9 @@ local function normalize_rangeStart_character(bufnr, query)
 end
 
 local function display_lines(bufnr, query_results)
+  if vim.fn.bufexists(bufnr) == 0 then
+    return
+  end
   local ns_id = vim.api.nvim_create_namespace("lsp-lens")
   delete_existing_lines(bufnr, ns_id)
   for _, query in pairs(query_results or {}) do
