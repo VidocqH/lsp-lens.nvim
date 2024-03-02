@@ -132,6 +132,21 @@ local function delete_existing_lines(bufnr, ns_id)
 end
 
 local function normalize_rangeStart_character(bufnr, query)
+  local cfg = config.config
+  local lines = vim.api.nvim_buf_get_lines(bufnr, query.line, query.line + 1, true)
+  if #lines == 0 then
+    return
+  end
+  local line = lines[1]
+
+  if not cfg.indent_by_lsp then
+    local tabstop = vim.api.nvim_buf_get_option(bufnr, "tabstop")
+    local normalized_text = string.gsub(line, "\t", string.rep(" ", tabstop))
+    local _, space_count = string.find(normalized_text, "^%s*")
+    query.character = space_count
+    return
+  end
+
   local clients = lsp_get_clients_method({ bufnr = bufnr, name = "lua_ls" })
 
   if vim.tbl_isempty(clients) then
@@ -139,13 +154,6 @@ local function normalize_rangeStart_character(bufnr, query)
   end
 
   local str = "local "
-
-  local lines = vim.api.nvim_buf_get_lines(bufnr, query.line, query.line + 1, true)
-  if #lines == 0 then
-    return
-  end
-  local line = lines[1]
-
   local indent = line:match("^%s+")
   indent = indent and indent:len() or 0
   local trimmed = vim.trim(line)
