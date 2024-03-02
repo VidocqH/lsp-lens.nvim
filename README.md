@@ -49,6 +49,8 @@ require'lsp-lens'.setup({
   target_symbol_kinds = { SymbolKind.Function, SymbolKind.Method, SymbolKind.Interface },
   -- Symbol Kinds that may have target symbol kinds as children
   wrapper_symbol_kinds = { SymbolKind.Class, SymbolKind.Struct },
+  -- Defines indentation logic. false means based on the line.
+  indent_by_lsp = true,
 })
 ```
 
