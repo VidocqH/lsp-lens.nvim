@@ -221,6 +221,7 @@ local function get_recent_editor(start_row, end_row, callback)
       end
     end
   end)
+  vim.loop.close(stdout)
 end
 
 local function do_request(symbols)
