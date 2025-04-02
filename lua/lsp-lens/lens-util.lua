@@ -65,9 +65,17 @@ local function get_cur_document_functions(results)
   return ret
 end
 
+local function client_supports_method(client, method)
+  if vim.fn.has("nvim-0.11") then
+    return client:supports_method(method)
+  else
+    return client.supports_method(method)
+  end
+end
+
 local function lsp_support_method(buf, method)
   for _, client in pairs(lsp_get_clients_method({ bufnr = buf })) do
-    if client.supports_method(method) then
+    if client_supports_method(client, method) then
       return true
     end
   end
